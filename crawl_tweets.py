@@ -76,10 +76,15 @@ class CrawlTweets:
         dump_limit = 0   
     
         for index, user in enumerate(self.user_id_list):
-            
-            user_timeline_tweets_obj = api.GetUserTimeline(user_id=user, count=200, exclude_replies=True)
-            time.sleep(self.SLEEP_TIME)
-            dump_limit += 1
+           
+           
+            try:
+                user_timeline_tweets_obj = api.GetUserTimeline(user_id=user, count=200, exclude_replies=True)
+                time.sleep(self.SLEEP_TIME)
+                dump_limit += 1
+
+            except:
+                continue
 
             for status_obj in user_timeline_tweets_obj:
                 status_dict = status_obj.AsDict()
