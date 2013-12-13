@@ -22,8 +22,9 @@ class CrawlTweets:
         self.user_id_set = set()
 
         #Constants
-        self.SLEEP_TIME = 70
         self.dump_count = 0
+        self.MY_SCREEN_NAME = 'iam_KarthikC'
+        self.SLEEP_TIME = 70
 
     def run_main(self):
         self.initialize_logger()
@@ -44,9 +45,10 @@ class CrawlTweets:
         #collect tweets
 
         self.get_my_home_timeline(api)
-        self.get_user_timeline(api)
+        self.get_friends_timeline(api)
 
     def get_my_home_timeline(self, api):
+
         home_timeline_tweets_obj = api.GetHomeTimeline(count=200, exclude_replies=True)
         time.sleep(self.SLEEP_TIME)  
  
@@ -69,38 +71,41 @@ class CrawlTweets:
                 self.user_id_set.add(user_id)
             except:
                 self.put_tweets()
-        
 
-    def get_user_timeline(self, api):
+    def get_friends_timeline(self, api):
         
-        dump_limit = 0   
-    
+        dump_limit = 0
+        
         for index, user in enumerate(self.user_id_list):
-           
-           
+            
             try:
                 user_timeline_tweets_obj = api.GetUserTimeline(user_id=user, count=200, exclude_replies=True)
                 time.sleep(self.SLEEP_TIME)
                 dump_limit += 1
 
-            except:
+            except Exception:
+                logging.info("Exception  !!!!  - %s - Continue" % (Exception))
                 continue
 
             for status_obj in user_timeline_tweets_obj:
                 status_dict = status_obj.AsDict()
 
-                if not status_dict: continue
+                if not status_dict: 
+                    logging.info("status dict is not present - Continue")
+                    continue
+
                 user_timeline_tweet = status_dict.get('text')
                 self.tweet_list.append(user_timeline_tweet)
+      
+                user_ids = api.GetFriendIDs(user_id=user)
+                time.sleep(self.SLEEP_TIME)
+ 
+                user_ids = [x for x in user_ids and x not in self.user_id_set]
+ 
+                self.user_id_list.extend(user_ids)
+                self.user_id_set.update(set(user_ids))
         
-                user_id = status_dict.get('id')
-                
-                if user_id in self.user_id_set:continue
-
-                self.user_id_list.append(user_id)
-                self.user_id_set.add(user_id)
-
-            if dump_limit == 2:
+            if dump_limit == 20:
                 self.put_tweets()
                 self.tweet_list=[]
                 dump_limit = 0
