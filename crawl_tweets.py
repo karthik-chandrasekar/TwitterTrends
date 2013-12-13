@@ -101,6 +101,8 @@ class CrawlTweets:
                 time.sleep(self.SLEEP_TIME)
  
                 user_ids = [x for x in user_ids and x not in self.user_id_set]
+
+                if not user_ids: continue
  
                 self.user_id_list.extend(user_ids)
                 self.user_id_set.update(set(user_ids))
