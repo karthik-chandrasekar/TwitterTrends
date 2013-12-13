@@ -63,9 +63,13 @@ class CrawlTweets:
             user_id = user_obj.get('id')
 
             if user_id in self.user_id_set: continue
-
-            self.user_id_list.append(user_id)
-            self.user_id_set.add(user_id)
+        
+            try:
+                self.user_id_list.append(user_id)
+                self.user_id_set.add(user_id)
+            except:
+                self.put_tweets()
+        
 
     def get_user_timeline(self, api):
         
@@ -75,23 +79,23 @@ class CrawlTweets:
             
             user_timeline_tweets_obj = api.GetUserTimeline(user_id=user, count=200, exclude_replies=True)
             time.sleep(self.SLEEP_TIME)
+            dump_limit += 1
 
             for status_obj in user_timeline_tweets_obj:
                 status_dict = status_obj.AsDict()
 
-            if not status_dict: continue
-            user_timeline_tweet = status_dict.get('text')
-            self.tweet_list.append(user_timeline_tweet)
-    
-            user_id = status_dict.get('id')
-            
-            if user_id in self.user_id_set:continue
+                if not status_dict: continue
+                user_timeline_tweet = status_dict.get('text')
+                self.tweet_list.append(user_timeline_tweet)
+        
+                user_id = status_dict.get('id')
+                
+                if user_id in self.user_id_set:continue
 
-            self.user_id_list.append(user_id)
-            self.user_id_set.add(user_id)
-            dump_limit += 1
+                self.user_id_list.append(user_id)
+                self.user_id_set.add(user_id)
 
-            if dump_limit == 50:
+            if dump_limit == 2:
                 self.put_tweets()
                 self.tweet_list=[]
                 dump_limit = 0
