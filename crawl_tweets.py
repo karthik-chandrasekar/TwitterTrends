@@ -65,7 +65,7 @@ class CrawlTweets:
             
             if not status_dict: continue
             homeline_tweet = status_dict.get('text')
-            self.tweets_file_fd.writelines(homeline_tweet)
+            self.tweets_file_fd.writelines("%s\n" % (homeline_tweet))
 
             user_obj = status_dict.get('user')
             if not user_obj: continue
@@ -76,6 +76,7 @@ class CrawlTweets:
         
             self.user_id_list.append(user_id)
             self.user_id_set.add(user_id)
+
 
     def get_friends_timeline(self, api):
         
@@ -97,17 +98,20 @@ class CrawlTweets:
                     continue
 
                 user_timeline_tweet = status_dict.get('text')
-                self.tweets_file_fd.writelines(user_timeline_tweet)
+                self.tweets_file_fd.writelines("%s\n" % (user_timeline_tweet))
       
                 user_ids = api.GetFriendIDs(user_id=user)
                 time.sleep(self.SLEEP_TIME)
  
-                user_ids = [x for x in user_ids and x not in self.user_id_set]
+                new_user_ids = []
+                for id in user_ids:
+                    if id not in self.user_id_set:
+                        new_user_ids.append(id)
 
-                if not user_ids: continue
+                if not new_user_ids: continue
  
-                self.user_id_list.extend(user_ids)
-                self.user_id_set.update(set(user_ids))
+                self.user_id_list.extend(new_user_ids)
+                self.user_id_set.update(set(new_user_ids))
         
 
 if __name__ == "__main__":
