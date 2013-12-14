@@ -79,8 +79,12 @@ class CrawlTweets:
 
 
     def get_friends_timeline(self, api):
+
+        friends_set = set()
         
         for index, user in enumerate(self.user_id_list):
+            if user in friends_set:
+                continue       
             
             try:
                 user_timeline_tweets_obj = api.GetUserTimeline(user_id=user, count=200, exclude_replies=True)
@@ -99,8 +103,10 @@ class CrawlTweets:
 
                 user_timeline_tweet = status_dict.get('text')
                 self.tweets_file_fd.writelines("%s\n" % (user_timeline_tweet))
-      
-            user_ids = api.GetFriendIDs(user_id=user)
+     
+ 
+            user_ids = api.GetFriendIDs(user_id=user, count=50)
+            friends_set.add(user)
             time.sleep(self.SLEEP_TIME)
 
             new_user_ids = []
