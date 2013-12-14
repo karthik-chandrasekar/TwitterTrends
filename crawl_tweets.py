@@ -17,7 +17,6 @@ class CrawlTweets:
         self.access_token_secret="9eSEibVq6axdZKTjXB0Vc8qlALV0xLsEoCsUXFqpNU"
 
         #Data structures
-        self.tweet_list = []
         self.user_id_list = []
         self.user_id_set = set()
 
@@ -44,8 +43,17 @@ class CrawlTweets:
     def get_tweets(self, api):
         #collect tweets
 
+        self.open_file()
         self.get_my_home_timeline(api)
         self.get_friends_timeline(api)
+        self.close_file()
+
+    def open_file(self):
+        self.tweets_file_name = os.path.join('OUTPUT', 'tweets_file')
+        self.tweets_file_fd = codecs.open(self.tweets_file_name, 'w', 'utf-8')
+
+    def close_file(self):
+        self.tweets_file_fd.close() 
 
     def get_my_home_timeline(self, api):
 
@@ -57,7 +65,7 @@ class CrawlTweets:
             
             if not status_dict: continue
             homeline_tweet = status_dict.get('text')
-            self.tweet_list.append(homeline_tweet)            
+            self.tweets_file_fd.writelines(homeline_tweet)
 
             user_obj = status_dict.get('user')
             if not user_obj: continue
@@ -66,22 +74,16 @@ class CrawlTweets:
 
             if user_id in self.user_id_set: continue
         
-            try:
-                self.user_id_list.append(user_id)
-                self.user_id_set.add(user_id)
-            except:
-                self.put_tweets()
+            self.user_id_list.append(user_id)
+            self.user_id_set.add(user_id)
 
     def get_friends_timeline(self, api):
-        
-        dump_limit = 0
         
         for index, user in enumerate(self.user_id_list):
             
             try:
                 user_timeline_tweets_obj = api.GetUserTimeline(user_id=user, count=200, exclude_replies=True)
                 time.sleep(self.SLEEP_TIME)
-                dump_limit += 1
 
             except Exception:
                 logging.info("Exception  !!!!  - %s - Continue" % (Exception))
@@ -95,7 +97,7 @@ class CrawlTweets:
                     continue
 
                 user_timeline_tweet = status_dict.get('text')
-                self.tweet_list.append(user_timeline_tweet)
+                self.tweets_file_fd.writelines(user_timeline_tweet)
       
                 user_ids = api.GetFriendIDs(user_id=user)
                 time.sleep(self.SLEEP_TIME)
@@ -107,17 +109,6 @@ class CrawlTweets:
                 self.user_id_list.extend(user_ids)
                 self.user_id_set.update(set(user_ids))
         
-            if dump_limit == 20:
-                self.put_tweets()
-                self.tweet_list=[]
-                dump_limit = 0
-                self.dump_count += 1
-
-    def put_tweets(self):
-            tweets_file_name = os.path.join('OUTPUT', 'tweets_file_%s' % (self.dump_count))
-            tweets_file_fd = codecs.open(tweets_file_name, 'w', 'utf-8')
-            tweets_file_fd.write(json.dumps(self.tweet_list))
-            tweets_file_fd.close()
 
 if __name__ == "__main__":
     ct = CrawlTweets()
