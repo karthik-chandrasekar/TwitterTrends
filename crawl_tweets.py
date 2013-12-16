@@ -45,7 +45,7 @@ class CrawlTweets:
 
         self.open_file()
         self.get_my_home_timeline(api)
-        self.get_friends_timeline(api)
+        self.get_followers_timeline(api)
         self.close_file()
 
     def open_file(self):
@@ -78,7 +78,7 @@ class CrawlTweets:
             self.user_id_set.add(user_id)
 
 
-    def get_friends_timeline(self, api):
+    def get_followers_timeline(self, api):
 
         friends_set = set()
         
@@ -105,7 +105,7 @@ class CrawlTweets:
                 self.tweets_file_fd.writelines("%s\n" % (user_timeline_tweet))
      
  
-            user_ids = api.GetFriendIDs(user_id=user, count=50)
+            user_ids = api.GetFollowerIDs(user_id=user)
             friends_set.add(user)
             time.sleep(self.SLEEP_TIME)
 
